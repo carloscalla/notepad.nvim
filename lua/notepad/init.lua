@@ -14,7 +14,7 @@ M.setup = function()
       utils.notify('Not inside a git repository. Using global notepad', vim.log.levels.INFO)
     end
 
-    utils.open_notepad(repo_name)
+    utils.open_notepad_in_split(repo_name)
   end
 
   vim.api.nvim_create_user_command('Notepad', function()
