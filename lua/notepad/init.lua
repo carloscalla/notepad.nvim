@@ -1,3 +1,4 @@
+local config = require 'notepad.config'
 local utils = require 'notepad.utils'
 
 local M = {}
@@ -23,7 +24,10 @@ local open_notepad = function(force_global)
   utils.open_notepad_in_split(repo_name)
 end
 
-M.setup = function()
+M.setup = function(opts)
+  -- Merge user options with defaults
+  config.set_opts(opts)
+
   M.open = function()
     open_notepad(false)
   end
@@ -32,8 +36,8 @@ M.setup = function()
     open_notepad(true)
   end
 
-  vim.api.nvim_create_user_command('Notepad', function(opts)
-    local force_global = opts.args == 'global'
+  vim.api.nvim_create_user_command('Notepad', function(cmd_args)
+    local force_global = cmd_args.args == 'global'
     open_notepad(force_global)
   end, {
     desc = 'Open notepad. Use "global" argument to force global notepad',

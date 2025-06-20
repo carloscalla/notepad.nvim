@@ -1,6 +1,6 @@
-local M = {}
+local config = require 'notepad.config'
 
-M.global_notepad_name = 'global'
+local M = {}
 
 ---@param msg string
 ---@param level? vim.log.levels
@@ -43,7 +43,7 @@ M.get_notepad_path = function(name)
   local notepad_dir = root .. '/.cache/notepad.nvim/'
 
   if not name or name == '' then
-    name = M.global_notepad_name
+    name = config.global_notepad_name
   end
 
   return vim.fn.expand(notepad_dir .. name .. '.md')
@@ -86,7 +86,58 @@ M.open_notepad_in_split = function(repo_name)
 
   -- Open the file in a horizontal split
   local escaped_path = vim.fn.fnameescape(notepad_path)
-  vim.cmd('botright split ' .. escaped_path)
+
+  -- Determine split command based on configuration
+  local split_cmd
+  local position = config._opts.position or 'bottom'
+
+  -- Determine position prefix and split type
+  local position_prefix = ''
+  local split_type = 'split'
+
+  if position == 'top' then
+    position_prefix = 'topleft '
+    split_type = 'split'
+  elseif position == 'bottom' then
+    position_prefix = 'botright '
+    split_type = 'split'
+  elseif position == 'left' then
+    position_prefix = 'leftabove '
+    split_type = 'vsplit'
+  elseif position == 'right' then
+    position_prefix = 'rightbelow '
+    split_type = 'vsplit'
+  else
+    -- Default to bottom if invalid position
+    position_prefix = 'botright '
+    split_type = 'split'
+  end
+
+  if config._opts.split_size then
+    if type(config._opts.split_size) == 'number' then
+      if config._opts.split_size > 0 and config._opts.split_size < 1 then
+        -- Percentage of window height/width
+        local size
+        if split_type == 'vsplit' then
+          size = math.floor(vim.o.columns * config._opts.split_size)
+        else
+          size = math.floor(vim.o.lines * config._opts.split_size)
+        end
+        split_cmd = position_prefix .. size .. split_type .. ' ' .. escaped_path
+      else
+        -- Absolute size in lines/columns
+        split_cmd = position_prefix .. config._opts.split_size .. split_type .. ' ' .. escaped_path
+      end
+    else
+      -- Invalid type, use default
+      split_cmd = position_prefix .. split_type .. ' ' .. escaped_path
+    end
+  else
+    -- Default behavior
+    split_cmd = position_prefix .. split_type .. ' ' .. escaped_path
+  end
+
+  vim.cmd(split_cmd)
 end
 
 return M

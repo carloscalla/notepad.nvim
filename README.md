@@ -24,7 +24,32 @@ require("notepad").setup({
 })
 ```
 
-## 📝 Usage Examples
+### Default Configuration
+
+```lua
+require("notepad").setup({
+  position = "bottom", -- 'top', 'left', 'right', 'bottom'
+  split_size = nil,   -- Size of the split (percentage or absolute size). nil uses default split behavior
+})
+```
+
+### Setup examples
+
+```lua
+-- Top horizontal split
+require('notepad').setup({ position = 'top', split_size = 15 })
+
+-- Left vertical split (30% of screen width)
+require('notepad').setup({ position = 'left', split_size = 0.3 })
+
+-- Right vertical split (50 columns)
+require('notepad').setup({ position = 'right', split_size = 50 })
+
+-- Bottom horizontal split (default)
+require('notepad').setup({ position = 'bottom', split_size = 0.25 })
+```
+
+## Usage Examples
 
 Use the following commands:
 
