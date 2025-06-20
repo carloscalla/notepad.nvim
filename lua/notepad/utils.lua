@@ -77,7 +77,7 @@ M.open_notepad_in_split = function(repo_name)
 
   -- Open the file in a horizontal split
   local escaped_path = vim.fn.fnameescape(notepad_path)
-  vim.cmd('split ' .. escaped_path)
+  vim.cmd('botright split ' .. escaped_path)
 end
 
 return M
