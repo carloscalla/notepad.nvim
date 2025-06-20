@@ -3,23 +3,30 @@ local utils = require 'notepad.utils'
 local M = {}
 
 M.setup = function()
-  M.open_notepad = function()
+  M.open_notepad = function(force_global)
     local repo_name
-    if utils.is_in_git_dir() then
-      repo_name = utils.get_git_repo_name()
-      if not repo_name then
-        utils.notify('Could not determine the git repository name. Using global notepad', vim.log.levels.ERROR)
-      end
+
+    if force_global then
+      utils.notify('Opening global notepad', vim.log.levels.INFO)
+      repo_name = nil -- This will use global notepad
     else
-      utils.notify('Not inside a git repository. Using global notepad', vim.log.levels.INFO)
+      if utils.is_in_git_dir() then
+        repo_name = utils.get_git_repo_name()
+        if not repo_name then
+          utils.notify('Could not determine the git repository name. Using global notepad', vim.log.levels.ERROR)
+        end
+      else
+        utils.notify('Not inside a git repository. Using global notepad', vim.log.levels.INFO)
+      end
     end
 
     utils.open_notepad_in_split(repo_name)
   end
 
-  vim.api.nvim_create_user_command('Notepad', function()
-    M.open_notepad()
-  end, { desc = 'Open notepad', nargs = 0 })
+  vim.api.nvim_create_user_command('Notepad', function(opts)
+    local force_global = opts.args == 'global'
+    M.open_notepad(force_global)
+  end, { desc = 'Open notepad. Use "global" argument to force global notepad', nargs = '?' })
 end
 
 return M
