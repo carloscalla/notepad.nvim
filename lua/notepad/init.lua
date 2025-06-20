@@ -26,7 +26,16 @@ M.setup = function()
   vim.api.nvim_create_user_command('Notepad', function(opts)
     local force_global = opts.args == 'global'
     M.open_notepad(force_global)
-  end, { desc = 'Open notepad. Use "global" argument to force global notepad', nargs = '?' })
+  end, { 
+    desc = 'Open notepad. Use "global" argument to force global notepad', 
+    nargs = '?',
+    complete = function(arg_lead, cmd_line, cursor_pos)
+      if arg_lead == '' or string.find('global', '^' .. vim.pesc(arg_lead)) then
+        return { 'global' }
+      end
+      return {}
+    end
+  })
 end
 
 return M
