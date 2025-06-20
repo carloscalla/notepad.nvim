@@ -42,3 +42,7 @@ require("notepad").open()
 -- Opens global notepad
 require("notepad").open_global()
 ```
+
+## Inspiration
+
+- [vim-bujo](https://github.com/vuciv/vim-bujo)
