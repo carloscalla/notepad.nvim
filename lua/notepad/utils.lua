@@ -66,8 +66,17 @@ M.open_notepad_in_split = function(repo_name)
 
   -- Create file if it doesn't exist
   if not vim.uv.fs_stat(notepad_path) then
-    local fd = vim.uv.fs_open(notepad_path, 'a', 420)
+    local fd = vim.uv.fs_open(notepad_path, 'w', 420)
     if fd then
+      -- Write header based on repo name
+      local header_content
+      if repo_name then
+        header_content = '# Repository: ' .. repo_name .. '\n\n'
+      else
+        header_content = '# Global Notepad\n\n'
+      end
+
+      vim.uv.fs_write(fd, header_content)
       vim.uv.fs_close(fd)
     else
       M.notify('Error creating notepad', vim.log.levels.ERROR)
