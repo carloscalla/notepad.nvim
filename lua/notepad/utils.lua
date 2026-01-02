@@ -2,6 +2,7 @@ local config = require 'notepad.config'
 
 local M = {}
 
+--- Send a notification to the user
 ---@param msg string
 ---@param level? vim.log.levels
 M.notify = function(msg, level)
@@ -20,6 +21,7 @@ M.is_in_git_dir = function()
 end
 
 --- Get the name of the current git repository
+--- returns nil if a remote origin URL cannot be found
 ---@return string|nil
 M.get_git_repo_name = function()
   local cmd = { 'git', 'config', '--get', 'remote.origin.url' }
@@ -37,22 +39,48 @@ end
 
 --- Get the path to the notepad file
 ---@param name string|nil The name of the notepad file. If nil, uses the global notepad name.
----@return string The full path to the notepad file
+---@return string fullNotepadPath The full path to the notepad file
 M.get_notepad_path = function(name)
-  local root = os.getenv 'HOME' or os.getenv 'USERPROFILE' or '~'
-  local notepad_dir = root .. '/.cache/notepad.nvim/'
+  local root = vim.fn.expand(os.getenv 'HOME' or os.getenv 'USERPROFILE' or '~')
+  local notepad_dir = vim.fs.joinpath(root, '.cache', 'notepad.nvim')
 
   if not name or name == '' then
     name = config.global_notepad_name
   end
 
-  return vim.fn.expand(notepad_dir .. name .. '.md')
+  return vim.fs.joinpath(notepad_dir, name .. '.md')
+end
+
+--- Check if notepad buffer is already open and focus it
+---@param notepad_path string The path to the notepad file
+---@return boolean success True if buffer was found and focused
+local function focus_existing_notepad(notepad_path)
+  local abs_path = vim.fn.fnamemodify(notepad_path, ':p')
+
+  -- Check all windows for the notepad buffer
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local buf_path = vim.api.nvim_buf_get_name(buf)
+
+    if vim.fn.fnamemodify(buf_path, ':p') == abs_path then
+      vim.api.nvim_set_current_win(win)
+      return true
+    end
+  end
+
+  return false
 end
 
 ---Open a file in a horizontal split, creating it if it doesn't exist
 ---@param repo_name string|nil The name of the file (without extension) to open
 M.open_notepad_in_split = function(repo_name)
   local notepad_path = M.get_notepad_path(repo_name)
+
+  -- Check if notepad is already open in a window
+  if focus_existing_notepad(notepad_path) then
+    return
+  end
+
   local notepad_dir = vim.fn.fnamemodify(notepad_path, ':h')
 
   -- Create directory if it doesn't exist
@@ -66,6 +94,7 @@ M.open_notepad_in_split = function(repo_name)
 
   -- Create file if it doesn't exist
   if not vim.uv.fs_stat(notepad_path) then
+    -- File mode 420 (octal) = 0644 (rw-r--r--)
     local fd = vim.uv.fs_open(notepad_path, 'w', 420)
     if fd then
       -- Write header based on repo name
@@ -76,8 +105,13 @@ M.open_notepad_in_split = function(repo_name)
         header_content = '# Global Notepad\n\n'
       end
 
-      vim.uv.fs_write(fd, header_content)
+      local written, write_err = vim.uv.fs_write(fd, header_content)
       vim.uv.fs_close(fd)
+
+      if not written then
+        M.notify('Error writing to notepad: ' .. tostring(write_err), vim.log.levels.ERROR)
+        return
+      end
     else
       M.notify('Error creating notepad', vim.log.levels.ERROR)
       return
@@ -138,6 +172,12 @@ M.open_notepad_in_split = function(repo_name)
   end
 
   vim.cmd(split_cmd)
+
+  -- Set buffer-local options for better notepad experience
+  local buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = buf })
+  vim.api.nvim_set_option_value('buflisted', true, { buf = buf })
+  vim.api.nvim_set_option_value('swapfile', false, { buf = buf })
 end
 
 return M
