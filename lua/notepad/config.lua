@@ -1,15 +1,22 @@
 local M = {}
 
+---@alias NotepadPosition 'top'|'bottom'|'left'|'right'
+
+---@class NotepadOptions
+---@field position? NotepadPosition Default: 'bottom'. Where to open the notepad.
+---@field split_size? number Default: nil. Size of the split (percentage or absolute size). nil uses default split behavior
+
 M.global_notepad_name = 'global'
 
 -- Configuration storage
+---@type NotepadOptions
 M._opts = {
-  position = 'bottom', -- 'bottom', 'top', 'left', 'right'
-  split_size = nil, -- nil means use default split behavior
+  position = 'bottom',
+  split_size = nil,
 }
 
 --- Set configuration from init module
----@param opts? table Configuration options
+---@param opts? NotepadOptions
 M.set_opts = function(opts)
   opts = opts or {}
 
