@@ -2,10 +2,11 @@
 
 Neovim plugin for taking quick notes
 
+Repo-specific notepad (if in git).
 <img width="1149" height="655" alt="image" src="https://github.com/user-attachments/assets/c0f825fb-53c6-4815-a29f-2de4d4726e92" />
 
+Global notepad.
 <img width="924" height="611" alt="image" src="https://github.com/user-attachments/assets/399c267b-be3f-4482-ad4e-032c7a7d0927" />
-
 
 ## Installation & Setup
 
